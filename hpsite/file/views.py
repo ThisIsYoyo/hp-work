@@ -38,8 +38,8 @@ def filter_file_under_path(path: Path, filter_name: str = '') -> list[File]:
 
 def sort_file_list(
         file_list: list[File],
-        sort_by: str = FileAttr.NAME,
-        sort_dir: str = OrderDirection.ASCENDING
+        sort_by: str = FileAttr.NAME.value,
+        sort_dir: str = OrderDirection.ASCENDING.value
 ) -> None:
     file_list.sort(
         key=lambda file: {
@@ -47,7 +47,7 @@ def sort_file_list(
             FileAttr.SIZE.value: file.size,
             FileAttr.NAME.value: file.name,
         }[sort_by],
-        reverse=(sort_dir == OrderDirection.DESCENDING),
+        reverse=(sort_dir == OrderDirection.DESCENDING.value),
     )
 
 
