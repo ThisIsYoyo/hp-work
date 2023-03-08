@@ -2,6 +2,7 @@ import os
 import re
 from pathlib import Path
 
+from django.db import transaction
 from django.http import FileResponse
 from rest_framework import status
 from rest_framework.decorators import api_view
@@ -54,6 +55,7 @@ def sort_file_list(
 class FileView(APIView):
     PROJECT_ROOT_PATH = Path(__file__).parent.parent.parent
 
+    @transaction.atomic
     def get(self, reqeust, file_path):
         full_file_path = self.PROJECT_ROOT_PATH / file_path
 
@@ -83,6 +85,7 @@ class FileView(APIView):
 
         return Response(f'/{file_path} not exist', status=status.HTTP_404_NOT_FOUND)
 
+    @transaction.atomic
     def post(self, request, file_path):
         full_file_path = self.PROJECT_ROOT_PATH / file_path
 
@@ -95,6 +98,7 @@ class FileView(APIView):
 
         return Response(f'/{file_path} created', status=status.HTTP_201_CREATED)
 
+    @transaction.atomic
     def patch(self, request, file_path):
         full_file_path = self.PROJECT_ROOT_PATH / file_path
 
@@ -107,6 +111,7 @@ class FileView(APIView):
 
         return Response(f'/{file_path} updated.', status=status.HTTP_200_OK)
 
+    @transaction.atomic
     def delete(self, request, file_path):
         full_file_path = self.PROJECT_ROOT_PATH / file_path
 
