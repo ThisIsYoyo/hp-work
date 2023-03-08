@@ -8,7 +8,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .define import FileAttr, OrderDirection
+from .define import FileAttr, OrderDirection, check_parameter_follow_defined
 
 
 @api_view(['GET'])
@@ -31,8 +31,14 @@ class FileView(APIView):
         full_file_path = self.PROJECT_ROOT_PATH / file_path
 
         if full_file_path.is_dir():
-            order_by = reqeust.GET.get('orderBy', FileAttr.NAME)
-            order_by_direction = reqeust.GET.get('orderByDirection', OrderDirection.ASCENDING)
+            order_by = reqeust.GET.get('orderBy') or FileAttr.NAME.value
+            if not check_parameter_follow_defined(order_by, FileAttr):
+                return Response(f'orderBy: {order_by} is not available', status.HTTP_400_BAD_REQUEST)
+
+            order_by_direction = reqeust.GET.get('orderByDirection') or OrderDirection.ASCENDING.value
+            if not check_parameter_follow_defined(order_by_direction, OrderDirection):
+                return Response(f'orderByDirection: {order_by_direction} is not available', status.HTTP_400_BAD_REQUEST)
+
             filter_by_name = reqeust.GET.get('filterByName', '')
 
             file_list = self.filter_file_under_path(full_file_path, filter_by_name)
@@ -48,7 +54,7 @@ class FileView(APIView):
         elif full_file_path.is_file():
             return FileResponse(open(full_file_path, 'rb'))
 
-        return Response(f'{full_file_path} not exist', status=status.HTTP_200_OK)
+        return Response(f'/{file_path} not exist', status=status.HTTP_404_NOT_FOUND)
 
     @staticmethod
     def filter_file_under_path(path: Path, filter_name: str = '') -> list[File]:
@@ -70,9 +76,9 @@ class FileView(APIView):
     ) -> None:
         file_list.sort(
             key=lambda file: {
-                FileAttr.LAST_MODIFY: file.last_modify_time,
-                FileAttr.SIZE: file.size,
-                FileAttr.NAME: file.name,
+                FileAttr.LAST_MODIFY.value: file.last_modify_time,
+                FileAttr.SIZE.value: file.size,
+                FileAttr.NAME.value: file.name,
             }[sort_by],
             reverse=(sort_dir == OrderDirection.DESCENDING),
         )
