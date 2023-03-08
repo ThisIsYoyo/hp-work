@@ -24,6 +24,33 @@ class File:
         self.name = name
 
 
+def filter_file_under_path(path: Path, filter_name: str = '') -> list[File]:
+    return [
+        File(
+            last_modify_time=os.path.getmtime(path / file_name),
+            size=os.path.getsize(path / file_name),
+            name=file_name,
+        )
+        for file_name in os.listdir(path)
+        if re.compile(rf'{filter_name}').search(file_name) and os.path.isfile(path / file_name)
+    ]
+
+
+def sort_file_list(
+        file_list: list[File],
+        sort_by: str = FileAttr.NAME,
+        sort_dir: str = OrderDirection.ASCENDING
+) -> None:
+    file_list.sort(
+        key=lambda file: {
+            FileAttr.LAST_MODIFY.value: file.last_modify_time,
+            FileAttr.SIZE.value: file.size,
+            FileAttr.NAME.value: file.name,
+        }[sort_by],
+        reverse=(sort_dir == OrderDirection.DESCENDING),
+    )
+
+
 class FileView(APIView):
     PROJECT_ROOT_PATH = Path(__file__).parent.parent.parent
 
@@ -41,8 +68,8 @@ class FileView(APIView):
 
             filter_by_name = reqeust.GET.get('filterByName', '')
 
-            file_list = self.filter_file_under_path(full_file_path, filter_by_name)
-            self.sort_file_list(file_list, order_by, order_by_direction)
+            file_list = filter_file_under_path(full_file_path, filter_by_name)
+            sort_file_list(file_list, order_by, order_by_direction)
 
             return Response(
                 {
@@ -55,33 +82,6 @@ class FileView(APIView):
             return FileResponse(open(full_file_path, 'rb'))
 
         return Response(f'/{file_path} not exist', status=status.HTTP_404_NOT_FOUND)
-
-    @staticmethod
-    def filter_file_under_path(path: Path, filter_name: str = '') -> list[File]:
-        return [
-            File(
-                last_modify_time=os.path.getmtime(path / file_name),
-                size=os.path.getsize(path / file_name),
-                name=file_name,
-            )
-            for file_name in os.listdir(path)
-            if re.compile(rf'{filter_name}').search(file_name) and os.path.isfile(path / file_name)
-        ]
-
-    @staticmethod
-    def sort_file_list(
-            file_list: list[File],
-            sort_by: str = FileAttr.NAME,
-            sort_dir: str = OrderDirection.ASCENDING
-    ) -> None:
-        file_list.sort(
-            key=lambda file: {
-                FileAttr.LAST_MODIFY.value: file.last_modify_time,
-                FileAttr.SIZE.value: file.size,
-                FileAttr.NAME.value: file.name,
-            }[sort_by],
-            reverse=(sort_dir == OrderDirection.DESCENDING),
-        )
 
     def post(self, request, file_path):
         full_file_path = self.PROJECT_ROOT_PATH / file_path
