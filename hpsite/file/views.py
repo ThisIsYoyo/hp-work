@@ -95,3 +95,26 @@ class FileView(APIView):
 
         return Response(f'/{file_path} created', status=status.HTTP_201_CREATED)
 
+    def patch(self, request, file_path):
+        full_file_path = self.PROJECT_ROOT_PATH / file_path
+
+        if not full_file_path.is_file():
+            return Response(f'/{file_path} not exist.', status=status.HTTP_400_BAD_REQUEST)
+
+        file_content = request.POST.get('file', '')
+        with open(full_file_path, 'w') as fp:
+            fp.write(file_content)
+
+        return Response(f'/{file_path} updated.', status=status.HTTP_200_OK)
+
+    def delete(self, request, file_path):
+        full_file_path = self.PROJECT_ROOT_PATH / file_path
+
+        if full_file_path.is_file():
+            os.remove(full_file_path)
+            return Response(f'/{file_path} removed.', status=status.HTTP_200_OK)
+
+        elif full_file_path.is_dir():
+            return Response(f'/{file_path} is a directory.', status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(f'/{file_path} not exist.', status=status.HTTP_400_BAD_REQUEST)
