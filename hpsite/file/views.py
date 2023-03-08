@@ -82,3 +82,16 @@ class FileView(APIView):
             }[sort_by],
             reverse=(sort_dir == OrderDirection.DESCENDING),
         )
+
+    def post(self, request, file_path):
+        full_file_path = self.PROJECT_ROOT_PATH / file_path
+
+        if full_file_path.is_file():
+            return Response(f'/{file_path} already exist.', status=status.HTTP_400_BAD_REQUEST)
+
+        file_content = request.POST.get('file', '')
+        with open(full_file_path, 'w') as fp:
+            fp.write(file_content)
+
+        return Response(f'/{file_path} created', status=status.HTTP_201_CREATED)
+
