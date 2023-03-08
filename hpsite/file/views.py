@@ -101,7 +101,7 @@ class FileView(APIView):
         if not full_file_path.is_file():
             return Response(f'/{file_path} not exist.', status=status.HTTP_400_BAD_REQUEST)
 
-        file_content = request.POST.get('file', '')
+        file_content = request.data.get('file', '')
         with open(full_file_path, 'w') as fp:
             fp.write(file_content)
 
